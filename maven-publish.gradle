@@ -1,0 +1,61 @@
+apply plugin: "maven"
+def release_url_suffix = ".release.url";
+def pre_url_suffix = ".pre.url";
+def snapshot_url_suffix = ".snapshot.url";
+def dev_url_suffix = ".dev.url";
+
+def release_version_suffix = ".release.version";
+def pre_version_suffix = ".pre.version";
+def snapshot_version_suffix = ".snapshot.version";
+def dev_version_suffix = ".dev.version";
+def snapshot = "isSnapshot"
+/**
+ * 上传私服托管
+ * jiangjiawen
+ * @return
+ */
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            def pro = rootProject.properties;
+            def username = pro.get("maven.username")
+            def pwd = pro.get("maven.password")
+            def name = project.name;
+            Integer isSnapshot = java.lang.Integer.parseInt(pro.get(snapshot));
+            def nexusRepositoryUrl;
+            String versionName
+            if (4==isSnapshot) {
+                versionName = pro.get(name.concat(dev_version_suffix))
+                nexusRepositoryUrl = pro.get(name.concat(dev_url_suffix));
+            } else if(3==isSnapshot){
+                versionName = pro.get(name.concat(snapshot_version_suffix))
+                nexusRepositoryUrl = pro.get(name.concat(snapshot_url_suffix))
+            } else if(2==isSnapshot){
+                versionName = pro.get(name.concat(pre_version_suffix))
+                nexusRepositoryUrl = pro.get(name.concat(pre_url_suffix))
+            } else if(1==isSnapshot){
+                versionName = pro.get(name.concat(release_version_suffix))
+                nexusRepositoryUrl = pro.get(name.concat(release_url_suffix))
+            }
+
+            repository(url: nexusRepositoryUrl) {
+                authentication(userName: username, password: pwd)
+            }
+            pom.project {
+                artifactId name
+                def manifestFile = android.sourceSets.main.manifest.srcFile
+                String packageName = 'com.bkjf'
+                version versionName.concat("-SNAPSHOT")
+                /*if (1!=isSnapshot) {
+                    version versionName.concat("-SNAPSHOT")
+                } else {
+                    version versionName
+                }*/
+                groupId "com.bkjf"
+                packaging 'aar'
+                description 'dependences lib'
+            }
+        }
+    }
+}
+
